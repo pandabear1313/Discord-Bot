@@ -1,0 +1,28 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const base_js_1 = __importDefault(require("../api/base.js"));
+const authNAuth_js_1 = __importDefault(require("./authNAuth.js"));
+const oAuth2_js_1 = __importDefault(require("./oAuth2.js"));
+class Auth extends base_js_1.default {
+    constructor(config, req) {
+        super(config, req);
+        this.authNAuth = new authNAuth_js_1.default(this.config, this.req);
+        this.OAuth2 = new oAuth2_js_1.default(this.config, this.req);
+        this.oAuth2 = this.OAuth2;
+    }
+    async getHeaderAuthorization(useIaf) {
+        if (this.authNAuth.eBayAuthToken) {
+            return {
+                Authorization: 'Token ' + this.authNAuth.eBayAuthToken
+            };
+        }
+        const accessToken = await this.OAuth2.getAccessToken();
+        return {
+            Authorization: (useIaf ? 'IAF ' : 'Bearer ') + accessToken
+        };
+    }
+}
+exports.default = Auth;

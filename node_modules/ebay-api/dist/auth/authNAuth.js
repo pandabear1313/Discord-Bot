@@ -1,0 +1,112 @@
+import debug from 'debug';
+import Base from '../api/base.js';
+import XMLRequest from '../api/traditional/XMLRequest.js';
+const log = debug('ebay:authNAuth');
+class AuthNAuth extends Base {
+    static generateAuthUrl(sandbox, ruName, sessionId, prompt = false) {
+        return [
+            sandbox ? AuthNAuth.SIGNIN_ENDPOINT.sandbox : AuthNAuth.SIGNIN_ENDPOINT.production,
+            '?SignIn',
+            '&RuName=', encodeURIComponent(ruName),
+            '&SessID=', encodeURIComponent(sessionId),
+            prompt ? '&prompt=login' : ''
+        ].join('');
+    }
+    constructor(config, req) {
+        super(config, req);
+        this.authToken = null;
+        if (this.config.authToken) {
+            this.setAuthToken(this.config.authToken);
+        }
+    }
+    get apiEndpoint() {
+        return this.config.sandbox ? AuthNAuth.API_ENDPOINT.sandbox : AuthNAuth.API_ENDPOINT.production;
+    }
+    async getSessionIdAndAuthUrl(ruName) {
+        if (!this.config.devId) {
+            throw new Error('DevId is required.');
+        }
+        ruName = ruName || this.config.ruName;
+        if (!ruName) {
+            throw new Error('RuName is required.');
+        }
+        const xmlApi = new XMLRequest('GetSessionID', {
+            RuName: ruName
+        }, this.getRequestConfig('GetSessionID'), this.req);
+        const data = await xmlApi.request();
+        log('GetSessionID data', data);
+        return {
+            sessionId: data.SessionID,
+            url: AuthNAuth.generateAuthUrl(this.config.sandbox, ruName, data.SessionID)
+        };
+    }
+    async mintToken(sessionId) {
+        if (!this.config.devId) {
+            throw new Error('DevId is required.');
+        }
+        const xmlApi = new XMLRequest('FetchToken', {
+            SessionID: sessionId
+        }, this.getRequestConfig('FetchToken'), this.req);
+        try {
+            return await xmlApi.request();
+        }
+        catch (error) {
+            log('Fetch auth token failed', error);
+            throw error;
+        }
+    }
+    async obtainToken(sessionId) {
+        const token = await this.mintToken(sessionId);
+        log('Obtain auth token', token);
+        this.setAuthToken(token);
+        return token;
+    }
+    setAuthToken(authToken) {
+        if (typeof authToken === 'string') {
+            this.authToken = {
+                eBayAuthToken: authToken
+            };
+        }
+        else {
+            this.authToken = authToken;
+        }
+    }
+    getAuthToken() {
+        if (!this.authToken) {
+            return null;
+        }
+        return {
+            ...this.authToken
+        };
+    }
+    get eBayAuthToken() {
+        return this.authToken?.eBayAuthToken ?? null;
+    }
+    getRequestConfig(callName) {
+        if (typeof this.config.siteId !== 'number') {
+            throw new Error('"siteId" is required for Auth\'n\'Auth.');
+        }
+        return {
+            useIaf: false,
+            xmlns: 'urn:ebay:apis:eBLBaseComponents',
+            endpoint: this.apiEndpoint,
+            headers: {
+                'X-EBAY-API-CALL-NAME': callName,
+                'X-EBAY-API-CERT-NAME': this.config.certId,
+                'X-EBAY-API-APP-NAME': this.config.appId,
+                'X-EBAY-API-DEV-NAME': this.config.devId,
+                'X-EBAY-API-SITEID': this.config.siteId,
+                'X-EBAY-API-COMPATIBILITY-LEVEL': 967
+            }
+        };
+    }
+}
+AuthNAuth.SIGNIN_ENDPOINT = {
+    sandbox: 'https://signin.sandbox.ebay.com/ws/eBayISAPI.dll',
+    production: 'https://signin.ebay.com/ws/eBayISAPI.dll'
+};
+AuthNAuth.API_ENDPOINT = {
+    production: 'https://api.ebay.com/ws/api.dll',
+    sandbox: 'https://api.sandbox.ebay.com/ws/api.dll'
+};
+export default AuthNAuth;

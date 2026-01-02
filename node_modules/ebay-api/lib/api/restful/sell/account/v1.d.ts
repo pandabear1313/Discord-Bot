@@ -1,0 +1,58 @@
+import { PaymentsProgramType } from '../../../../enums/index.js';
+import { CustomPolicyCreateRequest, CustomPolicyRequest, FulfillmentPolicyRequest, FulfillmentSellAccountProgram, InventoryLocation, InventoryLocationFull, PaymentPolicyRequest, ReturnPolicyRequest, SalesTaxBase } from '../../../../types/index.js';
+import { operations } from '../../../../types/restful/specs/sell_account_v1_oas3.js';
+import Restful, { OpenApi } from '../../index.js';
+export default class AccountV1 extends Restful implements OpenApi<operations> {
+    static id: string;
+    get basePath(): string;
+    getCustomPolicies(policyTypes: string): Promise<any>;
+    createCustomPolicy(body: CustomPolicyCreateRequest): Promise<any>;
+    getCustomPolicy(customPolicyId: string): Promise<any>;
+    updateCustomPolicy(customPolicyId: string, body: CustomPolicyRequest): Promise<any>;
+    getFulfillmentPolicies(marketplaceId: string): Promise<any>;
+    createFulfillmentPolicy(body: FulfillmentPolicyRequest): Promise<any>;
+    updateFulfillmentPolicy(fulfillmentPolicyId: string, body: FulfillmentPolicyRequest): Promise<any>;
+    deleteFulfillmentPolicy(fulfillmentPolicyId: string): Promise<any>;
+    getFulfillmentPolicy(fulfillmentPolicyId: string): Promise<any>;
+    getFulfillmentPolicyByName(marketplaceId: string, name: string): Promise<any>;
+    getPaymentPolicies(marketplaceId: string): Promise<any>;
+    getPaymentPolicy(paymentPolicyId: string): Promise<any>;
+    createPaymentPolicy(body: PaymentPolicyRequest): Promise<any>;
+    updatePaymentPolicy(paymentPolicyId: string, body: PaymentPolicyRequest): Promise<any>;
+    deletePaymentPolicy(paymentPolicyId: string): Promise<any>;
+    getPaymentPolicyByName(marketplaceId: string, name: string): Promise<any>;
+    getPaymentsProgram(marketplaceId: string, paymentsProgramType: PaymentsProgramType | `${PaymentsProgramType}`): Promise<any>;
+    getPaymentsProgramOnboarding(marketplaceId: string, paymentsProgramType: PaymentsProgramType | `${PaymentsProgramType}`): Promise<any>;
+    getPrivileges(): Promise<any>;
+    getOptedInPrograms(): Promise<any>;
+    optInToProgram(body?: FulfillmentSellAccountProgram): Promise<any>;
+    optOutOfProgram(body?: FulfillmentSellAccountProgram): Promise<any>;
+    getRateTables(countryCode?: string): Promise<any>;
+    getReturnPolicies(marketplaceId: string): Promise<any>;
+    getReturnPolicy(returnPolicyId: string): Promise<any>;
+    createReturnPolicy(body: ReturnPolicyRequest): Promise<any>;
+    updateReturnPolicy(returnPolicyId: string, body: ReturnPolicyRequest): Promise<any>;
+    deleteReturnPolicy(returnPolicyId: string): Promise<any>;
+    getReturnPolicyByName(marketplaceId: string, name: string): Promise<any>;
+    getSalesTax(countryCode: string, jurisdictionId: string): Promise<any>;
+    createOrReplaceSalesTax(countryCode: string, jurisdictionId: string, body: SalesTaxBase): Promise<any>;
+    deleteSalesTax(countryCode: string, jurisdictionId: string): Promise<any>;
+    getSalesTaxes(countryCode: string): Promise<any>;
+    getSubscription({ limit, continuationToken }?: {
+        limit?: string;
+        continuationToken?: string;
+    }): Promise<any>;
+    getKYC(): Promise<any>;
+    getAdvertisingEligibility(programTypes?: string): Promise<any>;
+    getInventoryLocation(merchantLocationKey: string): Promise<any>;
+    createInventoryLocation(merchantLocationKey: string, body: InventoryLocationFull): Promise<any>;
+    deleteInventoryLocation(merchantLocationKey: string): Promise<any>;
+    disableInventoryLocation(merchantLocationKey: string): Promise<any>;
+    enableInventoryLocation(merchantLocationKey: string): Promise<any>;
+    getInventoryLocations({ limit, offset }?: {
+        limit?: number;
+        offset?: number;
+    }): Promise<any>;
+    updateInventoryLocation(merchantLocationKey: string, body: InventoryLocation): Promise<any>;
+    getSalesTaxJurisdictions(countryCode: string): Promise<any>;
+}

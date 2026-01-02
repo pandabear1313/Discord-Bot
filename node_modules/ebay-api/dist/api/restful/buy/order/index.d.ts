@@ -1,0 +1,38 @@
+import { CheckoutSessionRequestWithoutPayment, CouponRequest, CreateGuestCheckoutSessionRequest, CreateSignInCheckoutSessionRequest, GuestPlaceOrderRequest, InitiatePaymentRequest, ShippingAddressImpl, UpdatePaymentInformation, UpdateQuantity, UpdateShippingOption } from '../../../../types/index.js';
+import { operations } from '../../../../types/restful/specs/buy_order_v1_beta_oas3.js';
+import Api, { OpenApi } from '../../index.js';
+export default class Order extends Api implements OpenApi<operations> {
+    static id: string;
+    get basePath(): string;
+    applyCoupon(checkoutSessionId: string, body: CouponRequest): Promise<any>;
+    getCheckoutSession(checkoutSessionId: string): Promise<any>;
+    initiateCheckoutSession(body?: CreateSignInCheckoutSessionRequest): Promise<any>;
+    placeOrder(checkoutSessionId: string): Promise<any>;
+    removeCoupon(checkoutSessionId: string, body?: CouponRequest): Promise<any>;
+    updatePaymentInfo(checkoutSessionId: string, body?: UpdatePaymentInformation): Promise<any>;
+    updateQuantity(checkoutSessionId: string, body?: UpdateQuantity): Promise<any>;
+    checkoutSessionId(checkoutSessionId: string, body?: UpdateQuantity): Promise<any>;
+    updateShippingAddress(checkoutSessionId: string, body?: ShippingAddressImpl): Promise<any>;
+    updateShippingOption(checkoutSessionId: string, body?: UpdateShippingOption): Promise<any>;
+    applyGuestCoupon(checkoutSessionId: string, body?: CouponRequest): Promise<any>;
+    getGuestCheckoutSession(checkoutSessionId: string): Promise<any>;
+    initiateGuestCheckoutSession(body?: CreateGuestCheckoutSessionRequest): Promise<any>;
+    initiateGuestPayment(checkoutSessionId: string, body?: InitiatePaymentRequest): Promise<any>;
+    placeGuestOrder(checkoutSessionId: string, body?: GuestPlaceOrderRequest): Promise<any>;
+    removeGuestCoupon(checkoutSessionId: string, body?: CouponRequest): Promise<any>;
+    updateGuestPaymentInfo(checkoutSessionId: string, body?: UpdatePaymentInformation): Promise<any>;
+    updateGuestQuantity(checkoutSessionId: string, body?: UpdateQuantity): Promise<any>;
+    updateGuestShippingAddress(checkoutSessionId: string, body?: ShippingAddressImpl): Promise<any>;
+    updateGuestShippingOption(checkoutSessionId: string, body?: UpdateShippingOption): Promise<any>;
+    applyProxyGuestCoupon(checkoutSessionId: string, body?: CouponRequest): Promise<any>;
+    getProxyGuestCheckoutSession(checkoutSessionId: string): Promise<any>;
+    initiateProxyGuestCheckoutSession(body?: CheckoutSessionRequestWithoutPayment): Promise<any>;
+    placeProxyGuestOrder(checkoutSessionId: string, body?: GuestPlaceOrderRequest): Promise<any>;
+    removeProxyGuestCoupon(checkoutSessionId: string, body?: CouponRequest): Promise<any>;
+    updateProxyGuestPaymentInfo(checkoutSessionId: string, authorization: string, date: string, requestNonce: string, signature: string, body?: UpdatePaymentInformation): Promise<any>;
+    updateProxyGuestQuantity(checkoutSessionId: string, body?: UpdateQuantity): Promise<any>;
+    updateProxyGuestShippingAddress(checkoutSessionId: string, body?: ShippingAddressImpl): Promise<any>;
+    updateProxyGuestShippingOption(checkoutSessionId: string, body?: UpdateShippingOption): Promise<any>;
+    getGuestPurchaseOrder(purchaseOrderId: string): Promise<any>;
+    getPurchaseOrder(purchaseOrderId: string): Promise<any>;
+}

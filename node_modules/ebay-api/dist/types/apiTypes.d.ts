@@ -1,0 +1,40 @@
+import { AxiosRequestConfig } from 'axios';
+import { Locale, MarketplaceId, SiteId } from '../enums/index.js';
+export type Scope = string[];
+export type Keyset = {
+    appId: string;
+    certId: string;
+    devId?: string;
+};
+export type RestConfig = {
+    marketplaceId?: MarketplaceId | `${MarketplaceId}`;
+    endUserCtx?: string;
+    contentLanguage?: Locale | `${Locale}`;
+    acceptLanguage?: Locale | `${Locale}`;
+};
+export type TraditionalConfig = {
+    siteId?: SiteId | `${SiteId}`;
+    authToken?: string | null;
+};
+export type Cipher = 'sha256' | 'sha512';
+export type Signature = {
+    cipher?: Cipher;
+    jwe: string;
+    privateKey: string;
+};
+export type eBayConfig = Keyset & {
+    sandbox: boolean;
+    ruName?: string;
+    scope?: Scope;
+    signature?: Signature | null;
+} & TraditionalConfig & RestConfig;
+export type ApiConfig = {
+    autoRefreshToken?: boolean;
+    axiosConfig?: AxiosRequestConfig;
+};
+export type Headers = Record<string, string | number | undefined>;
+export type ApiRequestConfig = {
+    headers?: Headers;
+    returnResponse?: boolean;
+};
+export type AppConfig = eBayConfig & ApiConfig;
