@@ -51,7 +51,10 @@ function startMonitoring(client) {
 
         // Single eBay call per query+type group
         const results = await searchItems(queryKey, 10, filter);
-        const fairPrice = MarketAnalyzer.calculateFairPrice(results);
+
+        // Get sold items to calculate fair price
+        const soldItems = await getSoldItems(queryKey);
+        const fairPrice = MarketAnalyzer.calculateFairPrice(soldItems);
 
         for (const item of results) {
           if (DB.isSeen(item.itemId)) continue;
