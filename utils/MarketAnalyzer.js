@@ -7,7 +7,12 @@ class MarketAnalyzer {
   static calculateFairPrice(soldItems) {
     if (!soldItems || soldItems.length === 0) return null;
 
-    const prices = soldItems.map((item) => parseFloat(item.price.value));
+    const prices = soldItems
+      .filter((item) => item.price && item.price.value)
+      .map((item) => parseFloat(item.price.value));
+
+    if (prices.length === 0) return null;
+
     const sum = prices.reduce((a, b) => a + b, 0);
     return (sum / prices.length).toFixed(2);
   }

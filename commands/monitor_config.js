@@ -19,6 +19,17 @@ module.exports = {
         .setName("query")
         .setDescription('Item to search for (e.g., "RTX 3080")')
         .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("type")
+        .setDescription("Filter by listing type")
+        .setRequired(false)
+        .addChoices(
+          { name: "All (Auction + Buy It Now)", value: "all" },
+          { name: "Auction Only", value: "auction" },
+          { name: "Buy It Now Only", value: "buy_it_now" }
+        )
     ),
 
   async execute(interaction) {
@@ -27,30 +38,66 @@ module.exports = {
     console.log("Monitor: Deferred.");
 
     const query = interaction.options.getString("query");
-    console.log(`Monitor: Querying "${query}"...`);
+    const typeFilter = interaction.options.getString("type") || "all";
+    console.log(
+      `Monitor: Querying "${query}" with type filter: ${typeFilter}...`
+    );
 
     // 1. Get Market Data
     try {
+      // Build filter based on type selection
+      let filter = "";
+      if (typeFilter === "auction") {
+        filter = "buyingOptions:{AUCTION}";
+      } else if (typeFilter === "buy_it_now") {
+        filter = "buyingOptions:{FIXED_PRICE}";
+      } else {
+        // Default: show both
+        filter = "buyingOptions:{AUCTION,FIXED_PRICE}";
+      }
+
       const [currentItems, soldItems] = await Promise.all([
-        searchItems(query, 5),
+        searchItems(query, 20, filter),
         getSoldItems(query),
       ]);
       console.log(
         `Monitor: Found ${currentItems.length} current, ${soldItems.length} sold.`
       );
+      console.log(`Monitor: Using filter: "${filter}"`);
+
+      // Debug: log first few items and their buying options
+      if (currentItems.length > 0) {
+        console.log("First 3 items:");
+        currentItems.slice(0, 3).forEach((item, i) => {
+          console.log(`  ${i + 1}. ${item.title?.substring(0, 50)}...`);
+          console.log(
+            `     buyingOptions: ${item.buyingOptions?.join(", ") || "N/A"}`
+          );
+          console.log(`     itemEndDate: ${item.itemEndDate || "N/A"}`);
+          console.log(`     price: ${item.price?.value || "N/A"}`);
+        });
+      }
 
       if (currentItems.length === 0) {
         await interaction.editReply(`No listings found for "**${query}**".`);
         return;
       }
 
-      const topItem = currentItems[0]; // Best match usually
+      // Find first item with valid price
+      let topItem = null;
+      for (const item of currentItems) {
+        if (item.price && item.price.value) {
+          topItem = item;
+          break;
+        }
+      }
 
       // Validate item structure
-      if (!topItem.price || !topItem.price.value) {
-        console.error("Monitor: Invalid item price structure:", topItem);
+      if (!topItem || !topItem.price || !topItem.price.value) {
+        console.error("Monitor: No items with valid pricing found");
+        console.error("Sample item:", JSON.stringify(currentItems[0], null, 2));
         await interaction.editReply(
-          `Could not parse pricing data for "**${query}**". Try a different search.`
+          `Could not find items with valid pricing for "**${query}**". Try a different search term.`
         );
         return;
       }
@@ -71,6 +118,29 @@ module.exports = {
         return;
       }
 
+      // Format item type and end time for top item
+      let itemType = "Buy It Now";
+      let endTimeInfo = "";
+
+      if (topItem.itemEndDate) {
+        itemType = "Auction";
+        const endDate = new Date(topItem.itemEndDate);
+        const now = new Date();
+        const timeLeft = endDate - now;
+
+        if (timeLeft > 0) {
+          const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+          const days = Math.floor(hours / 24);
+          if (days > 0) {
+            endTimeInfo = `Ends in ${days}d ${hours % 24}h`;
+          } else {
+            endTimeInfo = `Ends in ${hours}h`;
+          }
+        } else {
+          endTimeInfo = "Ended";
+        }
+      }
+
       // 2. Build Embed
       const embed = new EmbedBuilder()
         .setTitle(`🔎 Market Analysis: ${query}`)
@@ -81,11 +151,21 @@ module.exports = {
             value: `[${topItem.title}](${topItem.itemWebUrl})`,
           },
           {
+            name: "Type",
+            value: itemType,
+            inline: true,
+          },
+          {
             name: "Price",
             value: `${topItem.price.value} ${topItem.price.currency}`,
             inline: true,
           },
-          { name: "Fair Market Value", value: `$${fairPrice}`, inline: true },
+          {
+            name: endTimeInfo ? "Auction Ends" : "‎",
+            value: endTimeInfo || "‎",
+            inline: true,
+          },
+          { name: "Fair Market Value", value: `$${fairPrice}`, inline: false },
           {
             name: "Deal Meter",
             value: `${deal.bar} ${deal.score}% \n${deal.emoji} **${deal.label}**`,
@@ -105,7 +185,7 @@ module.exports = {
         );
 
       const btn = new ButtonBuilder()
-        .setCustomId(`monitor_add_${query.substring(0, 20)}`)
+        .setCustomId(`monitor_add_${query.substring(0, 15)}_${typeFilter}`)
         .setLabel("Add to Watchlist")
         .setStyle(ButtonStyle.Primary)
         .setEmoji("📺");
