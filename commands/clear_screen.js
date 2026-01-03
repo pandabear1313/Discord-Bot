@@ -28,12 +28,16 @@ module.exports = {
       await interaction.editReply({
         content: `✅ Successfully deleted ${deleted.size} message(s)!`,
       });
+
+      setTimeout(() => interaction.deleteReply(), 5000);
     } catch (error) {
       console.error("Error clearing messages:", error);
       await interaction.editReply({
         content:
           "❌ Failed to clear messages. Make sure the messages are less than 14 days old.",
       });
+
+      setTimeout(() => interaction.deleteReply(), 5000);
     }
   },
 };
